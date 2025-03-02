@@ -1,11 +1,11 @@
 ## iOS Setup
 
 Once you've acquired the CodePush plugin, you need to integrate it into the Xcode project of your React Native app and configure it correctly. To do this, take the following steps:
-​
+
 ### Plugin Installation and Configuration for React Native 0.76 version and above (iOS)
 
 1. Run `cd ios && pod install && cd ..` to install all the necessary CocoaPods dependencies.
-   ​
+
 2. Change bundleUrl on AppDelegate file.
 
    **If you're using objective-c:**
@@ -73,7 +73,10 @@ Once you've acquired the CodePush plugin, you need to integrate it into the Xcod
 
 4. Add the Deployment key to `Info.plist`:
 
-   To let the CodePush runtime know which deployment it should query for updates against, open your app's `Info.plist` file and add a new entry named `CodePushDeploymentKey`, whose value is the key of the deployment you want to configure this app against (like the key for the `Staging` deployment for the `FooBar` app). You can retrieve this value by running `appcenter codepush deployment list -a <ownerName>/<appName> -k` in the AppCenter CLI (the `-k` flag is necessary since keys aren't displayed by default) and copying the value of the `Key` column which corresponds to the deployment you want to use (see below). Note that using the deployment's name (like Staging) will not work. That "friendly name" is intended only for authenticated management usage from the CLI, and not for public consumption within your app.
+   To let the CodePush runtime know which deployment it should query for updates against, open your app's `Info.plist` 
+file and add a new entry named `CodePushDeploymentKey`, whose value is the key of the deployment you want to configure 
+this app against (like the key for the `Staging` deployment for the `FooBar` app). You can retrieve this value by running `revopush deployment ls <appName> -k` in the Revopush CLI (the `-k` or `--displayKeys` flag is necessary since keys aren't displayed by default) or take in [Revopush UI](https://app.revopush.org/applications) and copying the value of the `Key` column which corresponds to the deployment you want to use (see below). Note that using the deployment's name (like Staging) will not work. 
+That "friendly name" is intended only for authenticated management usage from the CLI, and not for public consumption within your app.
 
    ![Deployment list](https://cloud.githubusercontent.com/assets/116461/11601733/13011d5e-9a8a-11e5-9ce2-b100498ffb34.png)
 
@@ -116,7 +119,7 @@ Before doing anything, please [read the docs][ats] first.
 
 ### Code Signing setup
 
-Starting with CLI version **2.1.0** you can self sign bundles during release and verify its signature before installation of update. For more info about Code Signing please refer to [relevant code-push documentation section](https://github.com/microsoft/code-push/tree/v3.0.1/cli#code-signing).
+You can self sign bundles during release and verify its signature before installation of update. For more info about Code Signing please refer to [relevant code-push documentation section](https://github.com/microsoft/code-push/tree/v3.0.1/cli#code-signing).
 
 In order to configure Public Key for bundle verification you need to add record in `Info.plist` with name `CodePushPublicKey` and string value of public key content. Example:
 
