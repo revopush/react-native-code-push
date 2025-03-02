@@ -5,13 +5,12 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 
+import com.facebook.react.ReactHost;
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.JavaScriptModule;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.devsupport.interfaces.DevSupportManager;
-import com.facebook.react.modules.debug.interfaces.DeveloperSettings;
 import com.facebook.react.uimanager.ViewManager;
 
 import org.json.JSONException;
@@ -20,9 +19,20 @@ import org.json.JSONObject;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.lang.reflect.Method;
 
 public class CodePush implements ReactPackage {
+    private static final Object LOCK = new Object();
+    private static volatile CodePush mCurrentInstance;
+    public static CodePush getInstance(String deploymentKey, Context context, boolean isDebugMode) {
+        if (mCurrentInstance == null) {
+            synchronized (LOCK) {
+                if (mCurrentInstance == null) {
+                    mCurrentInstance = new CodePush(deploymentKey, context, isDebugMode);
+                }
+            }
+        }
+        return mCurrentInstance;
+    }
 
     private static boolean sIsRunningBinaryVersion = false;
     private static boolean sNeedToReportRollback = false;
@@ -40,7 +50,7 @@ public class CodePush implements ReactPackage {
 
     // Config properties.
     private String mDeploymentKey;
-    private static String mServerUrl = "https://codepush.appcenter.ms/";
+    private static String mServerUrl = "https://api.revopush.org/";
 
     private Context mContext;
     private final boolean mIsDebugMode;
@@ -48,7 +58,8 @@ public class CodePush implements ReactPackage {
     private static String mPublicKey;
 
     private static ReactInstanceHolder mReactInstanceHolder;
-    private static CodePush mCurrentInstance;
+
+    private static ReactHostHolder mReactHostHolder;
 
     public CodePush(String deploymentKey, Context context) {
         this(deploymentKey, context, false);
@@ -58,7 +69,7 @@ public class CodePush implements ReactPackage {
         return mServerUrl;
     }
 
-    public CodePush(String deploymentKey, Context context, boolean isDebugMode) {
+    private CodePush(String deploymentKey, Context context, boolean isDebugMode) {
         mContext = context.getApplicationContext();
 
         mUpdateManager = new CodePushUpdateManager(context.getFilesDir().getAbsolutePath());
@@ -84,22 +95,23 @@ public class CodePush implements ReactPackage {
         String serverUrlFromStrings = getCustomPropertyFromStringsIfExist("ServerUrl");
         if (serverUrlFromStrings != null) mServerUrl = serverUrlFromStrings;
 
-        clearDebugCacheIfNeeded(null);
+        // ignore liveReload when CodePush is initializing so that unneccessary cache could be cleared
+        clearDebugCacheIfNeeded(false);
         initializeUpdateAfterRestart();
     }
 
-    public CodePush(String deploymentKey, Context context, boolean isDebugMode, String serverUrl) {
+    private CodePush(String deploymentKey, Context context, boolean isDebugMode, String serverUrl) {
         this(deploymentKey, context, isDebugMode);
         mServerUrl = serverUrl;
     }
 
-    public CodePush(String deploymentKey, Context context, boolean isDebugMode, int publicKeyResourceDescriptor) {
+    private CodePush(String deploymentKey, Context context, boolean isDebugMode, int publicKeyResourceDescriptor) {
         this(deploymentKey, context, isDebugMode);
 
         mPublicKey = getPublicKeyByResourceDescriptor(publicKeyResourceDescriptor);
     }
 
-    public CodePush(String deploymentKey, Context context, boolean isDebugMode, String serverUrl, Integer publicKeyResourceDescriptor) {
+    private CodePush(String deploymentKey, Context context, boolean isDebugMode, String serverUrl, Integer publicKeyResourceDescriptor) {
         this(deploymentKey, context, isDebugMode);
 
         if (publicKeyResourceDescriptor != null) {
@@ -129,10 +141,10 @@ public class CodePush implements ReactPackage {
 
     private String getCustomPropertyFromStringsIfExist(String propertyName) {
         String property;
-      
+
         String packageName = mContext.getPackageName();
         int resId = mContext.getResources().getIdentifier("CodePush" + propertyName, "string", packageName);
-        
+
         if (resId != 0) {
             property = mContext.getString(resId);
 
@@ -140,37 +152,16 @@ public class CodePush implements ReactPackage {
                 return property;
             } else {
                 CodePushUtils.log("Specified " + propertyName + " is empty");
-            } 
+            }
         }
 
         return null;
     }
 
-    private boolean isLiveReloadEnabled(ReactInstanceManager instanceManager) {
-        // Use instanceManager for checking if we use LiveReload mode. In this case we should not remove ReactNativeDevBundle.js file
+    public void clearDebugCacheIfNeeded(boolean isLiveReloadEnabled) {
+        // for checking if we use LiveReload mode. In this case we should not remove ReactNativeDevBundle.js file
         // because we get error with trying to get this after reloading. Issue: https://github.com/microsoft/react-native-code-push/issues/1272
-        if (instanceManager != null) {
-            DevSupportManager devSupportManager = instanceManager.getDevSupportManager();
-            if (devSupportManager != null) {
-                DeveloperSettings devSettings = devSupportManager.getDevSettings();
-                Method[] methods = devSettings.getClass().getMethods();
-                for (Method m : methods) {
-                    if (m.getName().equals("isReloadOnJSChangeEnabled")) {
-                        try {
-                            return (boolean) m.invoke(devSettings);
-                        } catch (Exception x) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
-
-    public void clearDebugCacheIfNeeded(ReactInstanceManager instanceManager) {
-        if (mIsDebugMode && mSettingsManager.isPendingUpdate(null) && !isLiveReloadEnabled(instanceManager)) {
+        if (mIsDebugMode && mSettingsManager.isPendingUpdate(null) && !isLiveReloadEnabled) {
             // This needs to be kept in sync with https://github.com/facebook/react-native/blob/master/ReactAndroid/src/main/java/com/facebook/react/devsupport/DevSupportManager.java#L78
             File cachedDevBundle = new File(mContext.getFilesDir(), "ReactNativeDevBundle.js");
             if (cachedDevBundle.exists()) {
@@ -411,11 +402,23 @@ public class CodePush implements ReactPackage {
         mReactInstanceHolder = reactInstanceHolder;
     }
 
+    public static void setReactHost(ReactHostHolder reactHostHolder) {
+        mReactHostHolder = reactHostHolder;
+    }
+
     static ReactInstanceManager getReactInstanceManager() {
         if (mReactInstanceHolder == null) {
             return null;
         }
         return mReactInstanceHolder.getReactInstanceManager();
+    }
+
+    static ReactHost getReactHost() {
+        if (mReactHostHolder == null) {
+            return null;
+        }
+
+        return mReactHostHolder.getReactHost();
     }
 
     @Override

@@ -1,4 +1,4 @@
-import CodePush from "react-native-code-push";
+import CodePush from "@revopush/react-native-code-push";
 
 // This module wraps CodePush API calls to add test message callbacks to every function for simpler test code.
 
