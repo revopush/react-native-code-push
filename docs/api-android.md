@@ -10,7 +10,7 @@ Since `autolinking` uses `react-native.config.js` to link plugins, constructors 
   ```
 
 - **Server Url** - used for specifying CodePush Server Url.
-  The Default value: "https://api.revopush.org/" is overridden by adding your path to `strings.xml` with name `CodePushServerUrl`. CodePush automatically gets this property and will use this path to send requests. For example:
+  The Default value: "https://api.revopush.org" is overridden by adding your path to `strings.xml` with name `CodePushServerUrl`. CodePush automatically gets this property and will use this path to send requests. For example:
   ```xml
   <string moduleConfig="true" name="CodePushServerUrl">https://api.revopush.org</string>
   ```
