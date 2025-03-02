@@ -265,7 +265,7 @@ Follow our [comprehensive guide](https://github.com/revopush/code-push-cli/blob/
 
 ### Continuous Integration / Delivery
 
-In addition to being able to use the CodePush CLI to "manually" release updates, we believe that it's important to create a repeatable and sustainable solution for contiously delivering updates to your app. 
+In addition to being able to use the CodePush CLI to "manually" release updates, we believe that it's important to create a repeatable and sustainable solution for continuously delivering updates to your app. 
 That way, it's simple enough for you and/or your team to create and maintain the rhythm of performing agile deployments. 
 In order to assist with setting up a CodePush-based CD pipeline, refer to the following integrations with various CI servers:
 
