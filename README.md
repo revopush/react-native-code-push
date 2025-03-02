@@ -230,7 +230,7 @@ npm install -g @revopush/code-push-cli
 In its most basic form, this command only requires application name and platform (ios/android) .
 
 ```shell
-revopush release-react <appName> <patform ios/android>
+revopush release-react <appName> <platform ios/android>
 revopush release-react MyApp android -d Production
 release-react MyApp ios
 ```
