@@ -59,7 +59,7 @@ The "friendly name" is intended only for authenticated management usage from the
 
    In order to effectively make use of the `Staging` and `Production` deployments that were created along with your CodePush app, refer to the [multi-deployment testing](../README.md#multi-deployment-testing) docs below before actually moving your app's usage of CodePush into production.
 
-   Your `strings.xml` should looks like this:
+   Your `strings.xml` should look like this:
 
    ```xml
     <resources>
