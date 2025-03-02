@@ -93,8 +93,6 @@ npm install --save @revopush/react-native-code-push
 
 As with all other React Native plugins, the integration experience is different for iOS and Android, so perform the following setup steps depending on which platform(s) you are targeting. Note, if you are targeting both platforms it is recommended to create separate CodePush applications for each platform.
 
-If you want to see how other projects have integrated with CodePush, you can check out the excellent [example apps](#example-apps--starters) provided by the community. 
-
 *NOTE: This guide assumes you have used the `@react-native-community/cli init` command to initialize your React Native project.*
 
 Then continue with installing the native module
