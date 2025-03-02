@@ -1,16 +1,18 @@
 {
-  "name": "react-native-code-push",
-  "version": "9.0.1",
+  "name": "@revopush/react-native-code-push",
+  "version": "1.0.0",
   "description": "React Native plugin for the CodePush service",
   "main": "CodePush.js",
   "typings": "typings/react-native-code-push.d.ts",
-  "homepage": "https://microsoft.github.io/code-push",
+  "homepage": "https://revopush.org/",
   "keywords": [
     "react-native",
     "code",
+    "revopush",
+    "ota",
     "push"
   ],
-  "author": "Microsoft Corporation",
+  "author": "Revopush",
   "license": "MIT",
   "scripts": {
     "clean": "shx rm -rf bin",
@@ -32,7 +34,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/microsoft/react-native-code-push"
+    "url": "https://github.com/revopush/react-native-code-push"
   },
   "dependencies": {
     "code-push": "4.2.3",
@@ -73,8 +75,8 @@
       ]
     },
     "commands": {
-      "postlink": "node node_modules/react-native-code-push/scripts/postlink/run",
-      "postunlink": "node node_modules/react-native-code-push/scripts/postunlink/run"
+      "postlink": "node node_modules/@revopush/react-native-code-push/scripts/postlink/run",
+      "postunlink": "node node_modules/@revopush/react-native-code-push/scripts/postunlink/run"
     }
   }
 }

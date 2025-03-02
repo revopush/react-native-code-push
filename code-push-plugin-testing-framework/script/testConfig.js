@@ -12,7 +12,7 @@ var DEFAULT_UPDATES_DIRECTORY = path.join(os.tmpdir(), TestUtil_1.TestUtil.getPl
 var DEFAULT_PLUGIN_PATH = path.join(__dirname, "../..");
 var NPM_PLUGIN_PATH = TestUtil_1.TestUtil.getPluginName();
 var SETUP_FLAG_NAME = "--setup";
-var DEFAULT_PLUGIN_TGZ_NAME = TestUtil_1.TestUtil.getPluginName() + "-" + TestUtil_1.TestUtil.getPluginVersion() + ".tgz";
+var DEFAULT_PLUGIN_TGZ_NAME = TestUtil_1.TestUtil.getPluginName().replace("@", "").replace("/", "-") + "-" + TestUtil_1.TestUtil.getPluginVersion() + ".tgz";
 // CONST VARIABLES
 exports.TestAppName = "TestCodePush";
 exports.TestNamespace = "com.testcodepush";
@@ -24,3 +24,4 @@ exports.updatesDirectory = process.env.UPDATE_DIR ? process.env.UPDATE_DIR : DEF
 exports.onlyRunCoreTests = TestUtil_1.TestUtil.resolveBooleanVariables(process.env.CORE);
 exports.shouldSetup = TestUtil_1.TestUtil.readMochaCommandLineFlag(SETUP_FLAG_NAME);
 exports.restartEmulators = TestUtil_1.TestUtil.resolveBooleanVariables(process.env.CLEAN);
+exports.isOldArchitecture = TestUtil_1.TestUtil.resolveBooleanVariables(process.env.IS_OLD_ARCHITECTURE);
