@@ -227,7 +227,7 @@ npm install -g @revopush/code-push-cli
 
 *NOTE: Before you can start releasing updates, please log into Revopush by running the `revopush login` command.*
 
-In its most basic form, this command only requires application name and platform (ios/androidß) .
+In its most basic form, this command only requires application name and platform (ios/android) .
 
 ```shell
 revopush release-react <appName> <patform ios/android>
