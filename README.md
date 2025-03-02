@@ -273,7 +273,7 @@ In order to assist with setting up a CodePush-based CD pipeline, refer to the fo
 * [Bitrise Step](https://github.com/revopush/bitrise-steplib)
 * [Circle CI Orb](https://github.com/revopush/revopush-circleci-orb)
 
-Additionally, if you'd like more integrations, please message us at support@revopush.org
+Additionally, if you'd like more integrations, please message us at [support@revopush.org](mailto:support@revopush.org)
 
 ### Multi-Deployment Testing
 
