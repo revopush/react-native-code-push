@@ -100,7 +100,7 @@ If you want to change the default HTTP security configuration for any of these d
     <dict>
       <key>NSExceptionDomains</key>
       <dict>
-        <key>codepush.appcenter.ms</key>
+        <key>api.revopush.org</key>
         <dict><!-- read the ATS Apple Docs for available options --></dict>
       </dict>
     </dict>
