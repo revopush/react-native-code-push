@@ -152,7 +152,11 @@ public class CodePushNativeModule extends BaseJavaModule {
             Field bundleLoaderField = reactHostDelegate.getClass().getDeclaredField("jsBundleLoader");
             bundleLoaderField.setAccessible(true);
             bundleLoaderField.set(reactHostDelegate, latestJSBundleLoader);
-        } catch (Exception e) {
+        }
+        catch (NoSuchFieldException noSuchFileFound) {
+            // Ignore this error for Expo
+        }
+        catch (Exception e) {
             CodePushUtils.log("Unable to set JSBundle of ReactHostDelegate - CodePush may not support this version of React Native");
             throw new IllegalAccessException("Could not setJSBundle");
         }
@@ -182,13 +186,23 @@ public class CodePushNativeModule extends BaseJavaModule {
                 //     logic to reload the current React context.
                 final ReactHost reactHost = resolveReactHost();
                 if (reactHost == null) {
+                    loadBundleLegacy();
                     return;
                 }
 
                 String latestJSBundleFile = mCodePush.getJSBundleFileInternal(mCodePush.getAssetsBundleFileName());
 
-                // #2) Update the locally stored JS bundle file path
-                setJSBundle(getReactHostDelegate((ReactHostImpl) reactHost), latestJSBundleFile);
+                try {
+                    if (reactHost instanceof ReactHostImpl) {
+                        ReactHostDelegate delegate = getReactHostDelegate((ReactHostImpl) reactHost);
+                        if (delegate != null) {
+                            // #2) Update the locally stored JS bundle file path
+                            setJSBundle(delegate, latestJSBundleFile);
+                        }
+                    }
+                } catch (Exception e) {
+                    CodePushUtils.log("Exception setJSBundle: " + e.getMessage());
+                }
 
                 // #3) Get the context creation method
                 try {
