@@ -50,7 +50,9 @@ We try our best to maintain backwards compatibility of our plugin with previous 
 | React Native version(s) | Supporting CodePush version(s)                                                              |
 |-------------------------|---------------------------------------------------------------------------------------------|
 | <v0.76                  | Use [microsoft/code-push-react-native](https://github.com/microsoft/react-native-code-push) |
-| v0.76, v0.77, 0.78      | v1.0+ *(Support both New and Old Architectures)*                                            |
+| 0.76, 0.77, 0.78, 0.79  | v1.0+ *(Support both New and Old Architectures)*                                            |
+| v0.80                   | v1.2                                                                                        |
+| Expo sdk 52             | v1.3                                                                                        | 
 
 
 We work hard to respond to new RN releases, but they do occasionally break us. We will update this chart with each RN release, so that users can check to see what our "official" support is.
