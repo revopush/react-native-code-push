@@ -132,6 +132,8 @@ public class CodePushNativeModule extends BaseJavaModule {
             Field bundleLoaderField = instanceManager.getClass().getDeclaredField("mBundleLoader");
             bundleLoaderField.setAccessible(true);
             bundleLoaderField.set(instanceManager, latestJSBundleLoader);
+        } catch (NoSuchFieldException nsfe) {
+            CodePushUtils.log("Field 'jsBundleLoader' NOT FOUND on " + (reactHostDelegate != null ? reactHostDelegate.getClass().getName() : "null"));
         } catch (Exception e) {
             CodePushUtils.log("Unable to set JSBundle of ReactInstanceManager - CodePush may not support this version of React Native");
             throw new IllegalAccessException("Could not setJSBundle");
@@ -155,6 +157,7 @@ public class CodePushNativeModule extends BaseJavaModule {
         }
         catch (NoSuchFieldException noSuchFileFound) {
             // Ignore this error for Expo
+            CodePushUtils.log("Unable to set JSBundle of ReactHostDelegate - noSuchFileFound");
         }
         catch (Exception e) {
             CodePushUtils.log("Unable to set JSBundle of ReactHostDelegate - CodePush may not support this version of React Native");
@@ -429,6 +432,7 @@ public class CodePushNativeModule extends BaseJavaModule {
                 try {
                     JSONObject mutableUpdatePackage = CodePushUtils.convertReadableToJsonObject(updatePackage);
                     CodePushUtils.setJSONValueForKey(mutableUpdatePackage, CodePushConstants.BINARY_MODIFIED_TIME_KEY, "" + mCodePush.getBinaryResourcesModifiedTime());
+                    CodePushUtils.log("Start download");
                     mUpdateManager.downloadPackage(mutableUpdatePackage, mCodePush.getAssetsBundleFileName(), new DownloadProgressCallback() {
                         private boolean hasScheduledNextFrame = false;
                         private DownloadProgress latestDownloadProgress = null;

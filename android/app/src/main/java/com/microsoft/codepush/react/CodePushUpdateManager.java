@@ -146,6 +146,7 @@ public class CodePushUpdateManager {
     public void downloadPackage(JSONObject updatePackage, String expectedBundleFileName,
                                 DownloadProgressCallback progressCallback,
                                 String stringPublicKey) throws IOException {
+        CodePushUtils.log("downloadPackage with " + expectedBundleFileName);
         String newUpdateHash = updatePackage.optString(CodePushConstants.PACKAGE_HASH_KEY, null);
         String newUpdateFolderPath = getPackageFolderPath(newUpdateHash);
         String newUpdateMetadataPath = CodePushUtils.appendPathComponent(newUpdateFolderPath, CodePushConstants.PACKAGE_FILE_NAME);

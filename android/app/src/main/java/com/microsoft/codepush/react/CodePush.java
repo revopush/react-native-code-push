@@ -226,6 +226,7 @@ public class CodePush implements ReactPackage {
     }
 
     public static String getJSBundleFile() {
+        CodePushUtils.log("getJSBundleFile with: " + CodePushConstants.DEFAULT_JS_BUNDLE_NAME);
         return CodePush.getJSBundleFile(CodePushConstants.DEFAULT_JS_BUNDLE_NAME);
     }
 
@@ -238,6 +239,7 @@ public class CodePush implements ReactPackage {
     }
 
     public String getJSBundleFileInternal(String assetsBundleFileName) {
+        CodePushUtils.log("Set mAssetsBundleFileName with " + assetsBundleFileName);
         this.mAssetsBundleFileName = assetsBundleFileName;
         String binaryJsBundleUrl = CodePushConstants.ASSETS_BUNDLE_PREFIX + assetsBundleFileName;
 
