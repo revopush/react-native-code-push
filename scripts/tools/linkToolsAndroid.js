@@ -29,7 +29,7 @@ exports.getStringsResourcesPath = function () {
 }
 
 exports.getBuildGradlePath = function () {
-    return path.join("android", "app", "build.gradle");
+    return path.join("android", "build.gradle");
 }
 
 exports.isJsBundleOverridden = function (codeContents) {
