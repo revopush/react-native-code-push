@@ -6,6 +6,10 @@ public class CodePushConstants {
     public static final String CODE_PUSH_FOLDER_PREFIX = "CodePush";
     public static final String CODE_PUSH_HASH_FILE_NAME = "CodePushHash";
     public static final String CODE_PUSH_OLD_HASH_FILE_NAME = "CodePushHash.json";
+    public static final String CODE_PUSH_METADATA_FILE_NAME = "CodePushMetadata";
+    public static final String CODE_PUSH_PACKAGE_HASH = "packageHash"
+    public static final String CODE_PUSH_BUNDLE_HASH = "bundleHash"
+    public static final String CODE_PUSH_ASSET_HASH = "assetHash"
     public static final String CODE_PUSH_PREFERENCES = "CodePush";
     public static final String CURRENT_PACKAGE_KEY = "currentPackage";
     public static final String DEFAULT_JS_BUNDLE_NAME = "index.android.bundle";
