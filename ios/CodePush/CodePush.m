@@ -583,7 +583,19 @@ static NSString *const LatestRollbackCountKey = @"count";
     if ([[self class] isFailedHash:[failedPackage objectForKey:PackageHashKey]]) {
         return;
     }
-    
+
+    // The server may return null for optional fields (e.g. assetDownloadUrl,
+    // bundleDiffBlobUrl), which NSJSONSerialization parses to NSNull. NSNull
+    // is not a property list type, so passing it to NSUserDefaults raises
+    // NSInvalidArgumentException ("Attempt to insert non-property list object").
+    NSMutableDictionary *sanitizedPackage = [NSMutableDictionary dictionaryWithCapacity:failedPackage.count];
+    for (NSString *key in failedPackage) {
+        id value = failedPackage[key];
+        if (value && ![value isKindOfClass:[NSNull class]]) {
+            sanitizedPackage[key] = value;
+        }
+    }
+
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
     NSMutableArray *failedUpdates = [preferences objectForKey:FailedUpdatesKey];
     if (failedUpdates == nil) {
@@ -594,9 +606,18 @@ static NSString *const LatestRollbackCountKey = @"count";
         failedUpdates = [failedUpdates mutableCopy];
     }
 
-    [failedUpdates addObject:failedPackage];
-    [preferences setObject:failedUpdates forKey:FailedUpdatesKey];
-    [preferences synchronize];
+    [failedUpdates addObject:sanitizedPackage];
+    @try {
+        [preferences setObject:failedUpdates forKey:FailedUpdatesKey];
+        [preferences synchronize];
+    } @catch (NSException *exception) {
+        // Defensive: if a future server response shape slips through the filter,
+        // clear the corrupt list so the app does not crash on every subsequent
+        // launch via initializeUpdateAfterRestart -> rollbackPackage.
+        CPLog(@"Failed to persist failed update list: %@. Clearing key.", exception);
+        [preferences removeObjectForKey:FailedUpdatesKey];
+        [preferences synchronize];
+    }
 }
 
 /*
