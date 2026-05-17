@@ -5,15 +5,15 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.View;
 import android.view.Choreographer;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.OptIn;
 
 import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactHost;
 import com.facebook.react.ReactInstanceManager;
-import com.facebook.react.ReactRootView;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.BaseJavaModule;
 import com.facebook.react.bridge.JSBundleLoader;
@@ -41,7 +41,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -56,6 +55,7 @@ public class CodePushNativeModule extends BaseJavaModule {
     private SettingsManager mSettingsManager;
     private CodePushTelemetryManager mTelemetryManager;
     private CodePushUpdateManager mUpdateManager;
+    private boolean mIsExpoApp = false;
 
     private  boolean _allowed = true;
     private  boolean _restartInProgress = false;
@@ -68,6 +68,7 @@ public class CodePushNativeModule extends BaseJavaModule {
         mSettingsManager = settingsManager;
         mTelemetryManager = codePushTelemetryManager;
         mUpdateManager = codePushUpdateManager;
+        mIsExpoApp = detectExpoEnvironment();
 
         // Initialize module state while we have a reference to the current context.
         mBinaryContentsHash = CodePushUpdateUtils.getHashForBinaryContents(reactContext, mCodePush.isDebugMode());
@@ -118,6 +119,31 @@ public class CodePushNativeModule extends BaseJavaModule {
         });
     }
 
+    private boolean detectExpoEnvironment() {
+        try {
+            Class.forName("expo.modules.ReactNativeHostWrapper");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    private Field findField(Class<?> clazz, String... fieldNames) throws NoSuchFieldException {
+        Class<?> currentClass = clazz;
+        while (currentClass != null) {
+            for (String fieldName : fieldNames) {
+                try {
+                    return currentClass.getDeclaredField(fieldName);
+                } catch (NoSuchFieldException ignored) {
+                }
+            }
+
+            currentClass = currentClass.getSuperclass();
+        }
+
+        throw new NoSuchFieldException(fieldNames.length > 0 ? fieldNames[0] : "");
+    }
+
     // Use reflection to find and set the appropriate fields on ReactInstanceManager. See #556 for a proposal for a less brittle way
     // to approach this.
     private void setJSBundle(ReactInstanceManager instanceManager, String latestJSBundleFile) throws IllegalAccessException {
@@ -129,7 +155,7 @@ public class CodePushNativeModule extends BaseJavaModule {
                 latestJSBundleLoader = JSBundleLoader.createFileLoader(latestJSBundleFile);
             }
 
-            Field bundleLoaderField = instanceManager.getClass().getDeclaredField("mBundleLoader");
+            Field bundleLoaderField = findField(instanceManager.getClass(), "mBundleLoader");
             bundleLoaderField.setAccessible(true);
             bundleLoaderField.set(instanceManager, latestJSBundleLoader);
         } catch (Exception e) {
@@ -149,14 +175,10 @@ public class CodePushNativeModule extends BaseJavaModule {
                 latestJSBundleLoader = JSBundleLoader.createFileLoader(latestJSBundleFile);
             }
 
-            Field bundleLoaderField = reactHostDelegate.getClass().getDeclaredField("jsBundleLoader");
+            Field bundleLoaderField = findField(reactHostDelegate.getClass(), "jsBundleLoader", "_jsBundleLoader");
             bundleLoaderField.setAccessible(true);
             bundleLoaderField.set(reactHostDelegate, latestJSBundleLoader);
-        }
-        catch (NoSuchFieldException noSuchFileFound) {
-            // Ignore this error for Expo
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             CodePushUtils.log("Unable to set JSBundle of ReactHostDelegate - CodePush may not support this version of React Native");
             throw new IllegalAccessException("Could not setJSBundle");
         }
@@ -193,7 +215,7 @@ public class CodePushNativeModule extends BaseJavaModule {
                 String latestJSBundleFile = mCodePush.getJSBundleFileInternal(mCodePush.getAssetsBundleFileName());
 
                 try {
-                    if (reactHost instanceof ReactHostImpl) {
+                    if (!mIsExpoApp && reactHost instanceof ReactHostImpl) {
                         ReactHostDelegate delegate = getReactHostDelegate((ReactHostImpl) reactHost);
                         if (delegate != null) {
                             // #2) Update the locally stored JS bundle file path
@@ -201,7 +223,9 @@ public class CodePushNativeModule extends BaseJavaModule {
                         }
                     }
                 } catch (Exception e) {
-                    CodePushUtils.log("Exception setJSBundle: " + e.getMessage());
+                    if (!mIsExpoApp) {
+                        CodePushUtils.log("Exception setJSBundle: " + e.getMessage());
+                    }
                 }
 
                 // #3) Get the context creation method
@@ -302,14 +326,38 @@ public class CodePushNativeModule extends BaseJavaModule {
     // resetReactRootViews allows to call recreateReactContextInBackground without any exceptions
     // This fix also relates to https://github.com/microsoft/react-native-code-push/issues/878
     private void resetReactRootViews(ReactInstanceManager instanceManager) throws NoSuchFieldException, IllegalAccessException {
-        Field mAttachedRootViewsField = instanceManager.getClass().getDeclaredField("mAttachedRootViews");
-        mAttachedRootViewsField.setAccessible(true);
-        List<ReactRootView> mAttachedRootViews = (List<ReactRootView>)mAttachedRootViewsField.get(instanceManager);
-        for (ReactRootView reactRootView : mAttachedRootViews) {
-            reactRootView.removeAllViews();
-            reactRootView.setId(View.NO_ID);
+        Field attachedRootsField = findField(instanceManager.getClass(), "mAttachedReactRoots", "mAttachedRootViews");
+        attachedRootsField.setAccessible(true);
+        Object attachedRoots = attachedRootsField.get(instanceManager);
+        if (attachedRoots instanceof Iterable) {
+            for (Object reactRoot : (Iterable<?>) attachedRoots) {
+                resetReactRootView(reactRoot);
+            }
         }
-        mAttachedRootViewsField.set(instanceManager, mAttachedRootViews);
+    }
+
+    private void resetReactRootView(Object reactRoot) {
+        try {
+            View rootView = null;
+            if (reactRoot instanceof View) {
+                rootView = (View) reactRoot;
+            } else {
+                Method getRootViewGroupMethod = reactRoot.getClass().getMethod("getRootViewGroup");
+                Object rootViewGroup = getRootViewGroupMethod.invoke(reactRoot);
+                if (rootViewGroup instanceof View) {
+                    rootView = (View) rootViewGroup;
+                }
+            }
+
+            if (rootView instanceof ViewGroup) {
+                ((ViewGroup) rootView).removeAllViews();
+            }
+            if (rootView != null) {
+                rootView.setId(View.NO_ID);
+            }
+        } catch (Exception e) {
+            CodePushUtils.log("Failed to reset root view: " + e.getMessage());
+        }
     }
 
     private void clearLifecycleEventListener() {
@@ -689,7 +737,12 @@ public class CodePushNativeModule extends BaseJavaModule {
                                         if (installMode == CodePushInstallMode.IMMEDIATE.getValue()
                                                 || durationInBackground >= CodePushNativeModule.this.mMinimumBackgroundDuration) {
                                             CodePushUtils.log("Loading bundle on resume");
-                                            restartAppInternal(false);
+                                            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    restartAppInternal(false);
+                                                }
+                                            });
                                         }
                                     }
                                 }
@@ -848,8 +901,7 @@ public class CodePushNativeModule extends BaseJavaModule {
 
     public ReactHostDelegate getReactHostDelegate(ReactHostImpl reactHostImpl) {
         try {
-            Class<?> clazz = reactHostImpl.getClass();
-            Field field = clazz.getDeclaredField("reactHostDelegate");
+            Field field = findField(reactHostImpl.getClass(), "mReactHostDelegate", "reactHostDelegate");
             field.setAccessible(true);
 
             // Get the value of the field for the provided instance
