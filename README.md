@@ -53,7 +53,8 @@ We try our best to maintain backwards compatibility of our plugin with previous 
 | 0.76, 0.77, 0.78, 0.79  | v1.0+ *(Support both New and Old Architectures)*                                                     |
 | v0.80                   | v1.2                                                                                                 |
 | Expo sdk 52             | v1.3                                                                                                 | 
-| v0.81                   | v1.5                                                                                                 |
+| v0.81, v0.82            | v1.5                                                                                                 |
+| v0.83, expo 55          | v1.6                                                                                                 |
 
 
 We work hard to respond to new RN releases, but they do occasionally break us. We will update this chart with each RN release, so that users can check to see what our "official" support is.
