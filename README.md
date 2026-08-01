@@ -46,7 +46,9 @@ Revopush is a hosted OTA platform for React Native and Expo. It combines a dashb
 - Supports Expo projects through the official config plugin
 - Includes rollback controls for reverting a problematic release
 - Provides extended analytics by individual release and across the entire application
-- Supports multiple deployments, gradual rollouts, code signing, and CI/CD integrations
+- Supports percentage-based rollouts, from a controlled user cohort to 100%
+- Integrates with popular CI/CD platforms including GitHub Actions, Bitrise, and CircleCI
+- Supports multiple deployments and code signing
 
 OTA updates can change JavaScript and bundled assets. Changes to native code, native dependencies, permissions, or platform configuration still require a new store binary.
 
