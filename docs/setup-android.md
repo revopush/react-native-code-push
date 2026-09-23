@@ -1,6 +1,6 @@
 ## Android Setup
 
-* [Plugin Installation and Configuration for React Native 0.76 version and above](#plugin-installation-and-configuration-for-react-native-060-version-and-above-android)
+* [Plugin Installation and Configuration for React Native 0.76 version and above](#plugin-installation-and-configuration-for-react-native-076-version-and-above-android)
 * [Code Signing setup](#code-signing-setup)
 
 In order to integrate CodePush into your Android project, please perform the following steps:
@@ -16,11 +16,54 @@ In order to integrate CodePush into your Android project, please perform the fol
     ...
     ```
 
-2. Update the `MainApplication` file to use CodePush via the following changes:
+2. Update the `MainApplication.kt` file to use CodePush via the following changes.
 
-   For React Native 0.76 and above: update the `MainApplication.kt`
+   Which change you make depends on your React Native version, because the app template changed in 0.82:
 
-   **Important! : PackageList must be instantiated only one in application lifetime.**
+   * React Native 0.76–0.81 exposes a `reactNativeHost`, so CodePush is wired in by overriding `getJSBundleFile()`.
+   * React Native 0.82 and above dropped `reactNativeHost` from the template and builds the `reactHost` with
+     `getDefaultReactHost(...)`, so CodePush is wired in through the `jsBundleFilePath` parameter instead.
+
+   **Important! : PackageList must be instantiated only once in application lifetime.**
+
+   **For React Native 0.82 and above:**
+
+    ```kotlin
+    ...
+    import com.facebook.react.PackageList
+    import com.facebook.react.ReactApplication
+    import com.facebook.react.ReactHost
+    import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
+    // 1. Import the plugin class.
+    import com.microsoft.codepush.react.CodePush
+
+    class MainApplication : Application(), ReactApplication {
+
+      override val reactHost: ReactHost by lazy {
+        getDefaultReactHost(
+          context = applicationContext,
+          packageList =
+            PackageList(this).packages.apply {
+              // Packages that cannot be autolinked yet can be added manually here, for example:
+              // add(MyReactNativePackage())
+            },
+          // 2. Pass the CodePush bundle path so the CodePush runtime determines
+          // where to get the JS bundle location from on each app start.
+          // Keep this argument after `packageList`: evaluating the package list is
+          // what creates the CodePush instance that `getJSBundleFile()` requires.
+          jsBundleFilePath = CodePush.getJSBundleFile(),
+        )
+      }
+      ...
+    }
+    ```
+
+   `CodePush.getJSBundleFile()` returns `assets://index.android.bundle` until an update has been installed, and the
+   absolute path of the installed bundle afterwards. `getDefaultReactHost` accepts both forms for `jsBundleFilePath`, and
+   in debug builds Metro still takes precedence while the packager is running, so you do not need to guard this argument
+   with `BuildConfig.DEBUG`.
+
+   **For React Native 0.76–0.81:**
 
     ```kotlin
     ...
